@@ -1,0 +1,4 @@
+name: CommunityGoals
+version: '${version}'
+main: com.diamonddagger590.communitygoals.CommunityGoals
+api-version: '1.20'
