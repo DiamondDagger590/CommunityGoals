@@ -27,10 +27,10 @@ public class CommunityGoalsDatabaseManager extends DatabaseManager {
         File databaseFolder = new File(plugin.getDataFolder().getPath() + File.separator + "database");
 
         if(!databaseFolder.exists()){
-            databaseFolder.mkdir();
+            boolean result = databaseFolder.mkdirs();
         }
 
-        dbBuilder.setPath(databaseFolder.getPath() + File.separator + "mcrpg");
+        dbBuilder.setPath(databaseFolder.getPath() + File.separator + "communitygoals");
 
         Optional<Database> initializedDatabase = Optional.empty();
 

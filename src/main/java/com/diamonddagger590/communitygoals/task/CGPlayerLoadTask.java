@@ -3,7 +3,10 @@ package com.diamonddagger590.communitygoals.task;
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.player.CGPlayer;
 import com.diamonddagger590.mccore.task.PlayerLoadTask;
+import org.bukkit.ChatColor;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.logging.Level;
 
 public class CGPlayerLoadTask extends PlayerLoadTask {
 
@@ -24,12 +27,20 @@ public class CGPlayerLoadTask extends PlayerLoadTask {
 
     @Override
     protected boolean loadPlayer() {
-        return false;
+        return true;
+    }
+
+    @Override
+    protected void onPlayerLoadSuccessfully() {
+        super.onPlayerLoadSuccessfully();
+        getPlugin().getLogger().log(Level.INFO, "Player data has been loaded for player: " + getCorePlayer().getUUID());
+        getPlugin().getPlayerManager().addPlayer(getCorePlayer());
     }
 
     @Override
     protected void onPlayerLoadFail() {
-
+        super.onPlayerLoadFail();
+        getPlugin().getLogger().log(Level.SEVERE, ChatColor.RED + "There was an issue loading in the CommunityGoals player data for player with UUID: " + getCorePlayer().getUUID());
     }
 
     @Override

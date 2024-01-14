@@ -2,12 +2,17 @@ package com.diamonddagger590.communitygoals.database.table;
 
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.database.CommunityGoalsDatabaseManager;
+import com.diamonddagger590.communitygoals.goal.Goal;
+import com.diamonddagger590.communitygoals.goal.criteria.CriteriaType;
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class GoalDAO {
@@ -48,14 +53,14 @@ public class GoalDAO {
              *****/
             try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                     "(" +
-                    "`goal_uuid` varchar(36) NOT NULL," +
+                    "`goal_id` int(11) NOT NULL," +
                     "`goal_name` varchar(32) NOT NULL," +
                     "`goal_criteria` varchar(32) NOT NULL," +
                     "`required_contribution` int(11) NOT NULL DEFAULT 1," +
                     "`current_contribution` int(11) NOT NULL DEFAULT 0," +
                     "`start_time` int(11) NOT NULL DEFAULT 0," +
                     "`end_time` int(11) NOT NULL DEFAULT 0," +
-                    "PRIMARY KEY (`goal_uuid`)" +
+                    "PRIMARY KEY (`goal_id`)" +
                     ");")) {
                 statement.executeUpdate();
             }
@@ -104,6 +109,91 @@ public class GoalDAO {
             });
 
             completableFuture.complete(null);
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<Integer> getLastUsedGoalId(@NotNull Connection connection) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<Integer> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT MAX(goal_id) FROM " + TABLE_NAME + ";")){
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                    int result = -1;
+                    while (resultSet.next()) {
+                        result = resultSet.getInt(1);
+                    }
+
+                    completableFuture.complete(result);
+                }
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<List<Goal>> getAllUnfinishedGoals(@NotNull Connection connection) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<List<Goal>> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME + " WHERE end_time = -1")) {
+
+                List<Goal> goals = new ArrayList<>();
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                    while (resultSet.next()) {
+                        // TODO change to actually grab value
+                        Goal goal = new Goal(resultSet.getInt("goal_id"), resultSet.getString("goal_name"), CriteriaType.ITEM_DONATION,
+                                resultSet.getInt("required_contribution"), resultSet.getInt("current_contribution"), resultSet.getLong("start_time"), resultSet.getLong("end_time"));
+                        goals.add(goal);
+                    }
+                }
+                completableFuture.complete(goals);
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<Void> saveGoal(@NotNull Connection connection, @NotNull Goal goal) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (goal_id, goal_name, goal_criteria, " +
+                    "required_contribution, current_contribution, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+
+                preparedStatement.setInt(1, goal.getId());
+                preparedStatement.setString(2, goal.getName());
+                preparedStatement.setString(3, goal.getCriteriaType().name());
+                preparedStatement.setInt(4, goal.getRequiredContribution());
+                preparedStatement.setInt(5, goal.getCurrentContribution());
+                preparedStatement.setLong(6, goal.getStartTime());
+                preparedStatement.setLong(7, goal.getEndTime());
+
+                preparedStatement.executeUpdate();
+                completableFuture.complete(null);
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
         });
 
         return completableFuture;

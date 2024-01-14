@@ -15,4 +15,9 @@ public class CGPlayer extends CorePlayer {
     public CGPlayer(@NotNull UUID uuid) {
         super(uuid);
     }
+
+    @Override
+    public boolean useMutex() {
+        return false;
+    }
 }

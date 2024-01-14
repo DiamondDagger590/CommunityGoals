@@ -1,12 +1,15 @@
 package com.diamonddagger590.communitygoals.goal.criteria;
 
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class Criteria {
 
+    protected String configSetting;
+
+    public Criteria(@NotNull String configSetting) {
+        this.configSetting = configSetting;
+    }
+
     @NotNull
     public abstract CriteriaType getCriteriaType();
-
-    public abstract boolean canCriteriaProcessEvent(@NotNull Class<? extends Event> event);
 }

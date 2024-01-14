@@ -121,7 +121,6 @@ tasks {
         mergeServiceFiles()
         relocate("de.tr7zw.changeme.nbtapi", "com.diamonddagger590.nbtapi")
         relocate("org.bstats", "com.diamonddagger590.communitygoals")
-        relocate("net.kyori", "com.diamonddagger590.communitygoals.adventure")
         relocate("ch.jalu.configme", "com.diamonddagger590.communitygoals.configme")
         relocate("com.diamonddagger590.mccore", "com.diamonddagger590.communitygoals.mccore")
     }

@@ -1,4 +1,4 @@
-package com.diamonddagger590.communitygoals.listener;
+package com.diamonddagger590.communitygoals.listener.player;
 
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.player.CGPlayer;
@@ -16,6 +16,6 @@ public class PlayerJoinListener implements Listener {
         Player player = playerJoinEvent.getPlayer();
         CGPlayer cgPlayer = new CGPlayer(player);
 
-        new CGPlayerLoadTask(communityGoals, cgPlayer).run();
+        new CGPlayerLoadTask(communityGoals, cgPlayer).runTask();
     }
 }
