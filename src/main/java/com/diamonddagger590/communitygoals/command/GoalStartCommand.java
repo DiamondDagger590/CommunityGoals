@@ -1,9 +1,9 @@
 package com.diamonddagger590.communitygoals.command;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.IntegerArgument;
 import cloud.commandframework.arguments.standard.StringArgument;
 import com.diamonddagger590.communitygoals.CommunityGoals;
+import com.diamonddagger590.communitygoals.exception.IllegalGoalConfigIdException;
 import com.diamonddagger590.communitygoals.goal.Goal;
 import com.diamonddagger590.communitygoals.goal.GoalManager;
 import net.kyori.adventure.audience.Audience;
@@ -20,26 +20,24 @@ public class GoalStartCommand {
 
         commandManager.command(commandManager.commandBuilder("goal")
                 .literal("start")
-                .argument(StringArgument.quoted("goal_name"))
-                .argument(StringArgument.single("goal_criteria"))
-                .argument(IntegerArgument.of("required_contribution"))
+                .argument(StringArgument.single("goal_criteria_id"))
                 .permission("communitygoals.start")
                 .senderType(Player.class)
                 .handler(commandContext -> {
                             Player player = (Player) commandContext.getSender();
-
-                            String goalName = commandContext.get("goal_name");
-                            String criteria = commandContext.get("goal_criteria");
-                            int required_contribution = commandContext.get("required_contribution");
-
+                            String criteria = commandContext.get("goal_criteria_id");
                             GoalManager goalManager = communityGoals.getGoalManager();
-                            Goal goal = goalManager.createGoal(goalName, required_contribution);
                             Audience audience = CommunityGoals.getInstance().getAdventure().player(player);
                             MiniMessage miniMessage = CommunityGoals.getInstance().getMiniMessage();
-                            Component parsed = miniMessage.deserialize("<green>You have started a new goal!</green>");
-                            audience.sendMessage(parsed);
-                            goal.startGoal();
-                            goalManager.trackGoal(goal);
+                            try {
+                                Goal goal = goalManager.createGoal(criteria);
+                                Component parsed = miniMessage.deserialize("<green>You have started a new goal!</green>");
+                                audience.sendMessage(parsed);
+                                goal.startGoal();
+                                goalManager.trackGoal(goal);
+                            } catch (IllegalGoalConfigIdException e) {
+                                audience.sendMessage(miniMessage.deserialize("<red>There was an issue starting that goal. Please ensure the configuration for it is correct."));
+                            }
                         }
                 ));
     }

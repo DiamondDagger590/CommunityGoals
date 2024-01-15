@@ -4,11 +4,14 @@ import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.api.event.goal.GoalCompleteEvent;
 import com.diamonddagger590.communitygoals.api.event.goal.GoalEndEvent;
 import com.diamonddagger590.communitygoals.api.event.goal.GoalStartEvent;
+import com.diamonddagger590.communitygoals.config.FileType;
 import com.diamonddagger590.communitygoals.database.table.GoalDAO;
 import com.diamonddagger590.communitygoals.exception.GoalAlreadyStartedException;
+import com.diamonddagger590.communitygoals.exception.IllegalGoalConfigIdException;
 import com.diamonddagger590.communitygoals.goal.criteria.Criteria;
 import com.diamonddagger590.communitygoals.goal.criteria.CriteriaType;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Calendar;
@@ -16,37 +19,50 @@ import java.util.Calendar;
 public class Goal {
 
     private int id;
-    private final String name;
-    private final CriteriaType criteriaType;
-    private final Criteria criteria;
-    private final int requiredContribution;
+    private String name;
+    private Criteria criteria;
+    private String criteriaConfigName;
+    private int requiredContribution;
     private int currentContribution;
     private long startTime;
     private long endTime;
 
-    Goal(int id, @NotNull String name, @NotNull CriteriaType criteriaType, int requiredContribution) {
+    Goal(int id, @NotNull String criteriaConfigName) throws IllegalGoalConfigIdException {
         if (id <= 0) {
             throw new IllegalArgumentException(String.format("An invalid id of %d was passed in for a Goal.", id));
         }
         this.id = id;
-        this.name = name;
-        this.criteriaType = criteriaType;
-        this.criteria = criteriaType.getCriteria();
-        this.requiredContribution = requiredContribution;
+        this.criteriaConfigName = criteriaConfigName;
+        loadCriteria(true);
         this.currentContribution = 0;
         this.startTime = -1;
         this.endTime = -1;
     }
 
-    public Goal(int id, @NotNull String name, @NotNull CriteriaType criteriaType, int requiredContribution, int currentContribution, long startTime, long endTime) {
+    public Goal(int id, @NotNull String name, @NotNull String criteriaConfigName, int currentContribution, long startTime, long endTime) throws IllegalGoalConfigIdException {
         this.id = id;
         this.name = name;
-        this.criteriaType = criteriaType;
-        this.criteria = criteriaType.getCriteria();
-        this.requiredContribution = requiredContribution;
+        this.criteriaConfigName = criteriaConfigName;
+        loadCriteria(false);
         this.currentContribution = currentContribution;
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    private void loadCriteria(boolean loadAll) throws IllegalGoalConfigIdException {
+        FileConfiguration fileConfiguration = CommunityGoals.getInstance().getFileManager().getCustomFile(FileType.GOALS_CONFIG).getFileConfiguration();
+        try {
+            CriteriaType criteriaType = CriteriaType.valueOf(fileConfiguration.getString("goals." + criteriaConfigName + ".contribution_type"));
+            criteria = criteriaType.getCriteria(criteriaConfigName);
+            requiredContribution = fileConfiguration.getInt("goals." + criteriaConfigName + ".required_contribution");
+            if (loadAll) {
+                name = fileConfiguration.getString("goals." + criteriaConfigName + ".name");
+            }
+        }
+        catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalGoalConfigIdException(String.format("Could not load criteria data for goal with configuration id %s", criteriaConfigName));
+        }
+
     }
 
     public int getId() {
@@ -59,8 +75,8 @@ public class Goal {
     }
 
     @NotNull
-    public CriteriaType getCriteriaType() {
-        return criteriaType;
+    public String getCriteriaConfigId() {
+        return criteriaConfigName;
     }
 
     @NotNull
@@ -131,5 +147,18 @@ public class Goal {
 
     public void saveGoal() {
         GoalDAO.saveGoal(CommunityGoals.getInstance().getDatabaseManager().getDatabase().getConnection(), this);
+    }
+
+    public void reloadGoal() {
+        try {
+            loadCriteria(false);
+        }
+        catch (IllegalGoalConfigIdException e) {
+            e.printStackTrace();
+        }
+        // Check to see if contribution went lower than what was allowed
+        if (currentContribution >= requiredContribution) {
+            completeGoal();
+        }
     }
 }

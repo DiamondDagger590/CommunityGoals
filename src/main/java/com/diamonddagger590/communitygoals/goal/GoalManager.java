@@ -2,7 +2,7 @@ package com.diamonddagger590.communitygoals.goal;
 
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.database.table.GoalDAO;
-import com.diamonddagger590.communitygoals.goal.criteria.CriteriaType;
+import com.diamonddagger590.communitygoals.exception.IllegalGoalConfigIdException;
 import com.google.common.collect.ImmutableSet;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,8 +32,8 @@ public class GoalManager {
     }
 
     @NotNull
-    public Goal createGoal(@NotNull String goalName, int requiredContribution) {
-        Goal goal = new Goal(latestGoalId + 1, goalName, CriteriaType.ITEM_DONATION, requiredContribution);
+    public Goal createGoal(@NotNull String criteriaConfigName) throws IllegalGoalConfigIdException {
+        Goal goal = new Goal(latestGoalId + 1, criteriaConfigName);
         latestGoalId = goal.getId();
         goal.saveGoal();
         return goal;
@@ -57,6 +57,12 @@ public class GoalManager {
 
     public ImmutableSet<Goal> getActiveGoals() {
         return ImmutableSet.copyOf(activeGoals.values());
+    }
+
+    public void reloadGoals() {
+        for (Goal goal : ImmutableSet.copyOf(activeGoals.values())) {
+            goal.reloadGoal();
+        }
     }
 
     public void shutdown() {

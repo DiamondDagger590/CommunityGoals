@@ -4,6 +4,8 @@ import com.diamonddagger590.communitygoals.command.DonateItemCommand;
 import com.diamonddagger590.communitygoals.command.GoalEndCommand;
 import com.diamonddagger590.communitygoals.command.GoalListCommand;
 import com.diamonddagger590.communitygoals.command.GoalStartCommand;
+import com.diamonddagger590.communitygoals.command.ReloadCommand;
+import com.diamonddagger590.communitygoals.config.FileManager;
 import com.diamonddagger590.communitygoals.database.CommunityGoalsDatabaseManager;
 import com.diamonddagger590.communitygoals.goal.GoalManager;
 import com.diamonddagger590.communitygoals.goal.criteria.CriteriaManager;
@@ -22,11 +24,13 @@ public final class CommunityGoals extends CorePlugin {
 
     private CriteriaManager criteriaManager;
     private GoalManager goalManager;
+    private FileManager fileManager;
 
     @Override
     public void onEnable() {
         super.onEnable();
 
+        this.fileManager = new FileManager(this);
         initializeDatabase();
 
         criteriaManager = new CriteriaManager();
@@ -56,6 +60,7 @@ public final class CommunityGoals extends CorePlugin {
         GoalStartCommand.registerCommand();
         GoalListCommand.registerCommand();
         GoalEndCommand.registerCommand();
+        ReloadCommand.registerCommand();
     }
 
     @Override
@@ -83,6 +88,11 @@ public final class CommunityGoals extends CorePlugin {
     @Override
     public CommunityGoalsDatabaseManager getDatabaseManager() {
         return (CommunityGoalsDatabaseManager) super.getDatabaseManager();
+    }
+
+    @NotNull
+    public FileManager getFileManager() {
+        return fileManager;
     }
 
     @NotNull

@@ -12,4 +12,6 @@ public abstract class Criteria {
 
     @NotNull
     public abstract CriteriaType getCriteriaType();
+
+    public abstract void loadCriteria();
 }

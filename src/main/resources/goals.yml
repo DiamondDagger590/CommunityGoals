@@ -1,0 +1,19 @@
+goals:
+  # Goal criteria id
+  rubble_goal:
+    # Goal's display name
+    name: '<gold>Collect Rubble!'
+    # How much contribution is required
+    required_contribution: 100
+    # Only option right now is ITEM_DONATION
+    contribution_type: ITEM_DONATION
+    # If absent, a default start message will be used
+    start_message: '<green>The <gold>Collect Rubble</gold> goal has started! Donate 100 dirt, gravel, stone or cobble to complete.</green>'
+    # If absent, a default end message will be used
+    completion_message: '<green>The <gold>Collect Rubble</gold> goal has been completed!</green>'
+    # Items accepted for the donation
+    accepted_items:
+      - DIRT
+      - GRAVEL
+      - STONE
+      - COBBLESTONE

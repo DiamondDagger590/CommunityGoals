@@ -2,8 +2,8 @@ package com.diamonddagger590.communitygoals.database.table;
 
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.database.CommunityGoalsDatabaseManager;
+import com.diamonddagger590.communitygoals.exception.IllegalGoalConfigIdException;
 import com.diamonddagger590.communitygoals.goal.Goal;
-import com.diamonddagger590.communitygoals.goal.criteria.CriteriaType;
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,8 +55,7 @@ public class GoalDAO {
                     "(" +
                     "`goal_id` int(11) NOT NULL," +
                     "`goal_name` varchar(32) NOT NULL," +
-                    "`goal_criteria` varchar(32) NOT NULL," +
-                    "`required_contribution` int(11) NOT NULL DEFAULT 1," +
+                    "`goal_criteria_name` varchar(32) NOT NULL," +
                     "`current_contribution` int(11) NOT NULL DEFAULT 0," +
                     "`start_time` int(11) NOT NULL DEFAULT 0," +
                     "`end_time` int(11) NOT NULL DEFAULT 0," +
@@ -154,10 +153,14 @@ public class GoalDAO {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
 
                     while (resultSet.next()) {
-                        // TODO change to actually grab value
-                        Goal goal = new Goal(resultSet.getInt("goal_id"), resultSet.getString("goal_name"), CriteriaType.ITEM_DONATION,
-                                resultSet.getInt("required_contribution"), resultSet.getInt("current_contribution"), resultSet.getLong("start_time"), resultSet.getLong("end_time"));
-                        goals.add(goal);
+                        try {
+                            Goal goal = new Goal(resultSet.getInt("goal_id"), resultSet.getString("goal_name"), resultSet.getString("goal_criteria_name"),
+                                    resultSet.getInt("current_contribution"), resultSet.getLong("start_time"), resultSet.getLong("end_time"));
+                            goals.add(goal);
+                        }
+                        catch (IllegalGoalConfigIdException e) {
+                            completableFuture.completeExceptionally(e);
+                        }
                     }
                 }
                 completableFuture.complete(goals);
@@ -177,16 +180,15 @@ public class GoalDAO {
 
         databaseManager.getDatabaseExecutorService().submit(() -> {
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (goal_id, goal_name, goal_criteria, " +
-                    "required_contribution, current_contribution, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (goal_id, goal_name, goal_criteria_name, " +
+                    "current_contribution, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?)")) {
 
                 preparedStatement.setInt(1, goal.getId());
                 preparedStatement.setString(2, goal.getName());
-                preparedStatement.setString(3, goal.getCriteriaType().name());
-                preparedStatement.setInt(4, goal.getRequiredContribution());
-                preparedStatement.setInt(5, goal.getCurrentContribution());
-                preparedStatement.setLong(6, goal.getStartTime());
-                preparedStatement.setLong(7, goal.getEndTime());
+                preparedStatement.setString(3, goal.getCriteriaConfigId());
+                preparedStatement.setInt(4, goal.getCurrentContribution());
+                preparedStatement.setLong(5, goal.getStartTime());
+                preparedStatement.setLong(6, goal.getEndTime());
 
                 preparedStatement.executeUpdate();
                 completableFuture.complete(null);
