@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class GoalDAO {
@@ -145,13 +146,10 @@ public class GoalDAO {
         CompletableFuture<List<Goal>> completableFuture = new CompletableFuture<>();
 
         databaseManager.getDatabaseExecutorService().submit(() -> {
-
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME + " WHERE end_time = -1")) {
-
                 List<Goal> goals = new ArrayList<>();
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
-
                     while (resultSet.next()) {
                         try {
                             Goal goal = new Goal(resultSet.getInt("goal_id"), resultSet.getString("goal_name"), resultSet.getString("goal_criteria_name"),
@@ -164,6 +162,38 @@ public class GoalDAO {
                     }
                 }
                 completableFuture.complete(goals);
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<Optional<Goal>> getGoal(@NotNull Connection connection, int goalId) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<Optional<Goal>> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + TABLE_NAME + " WHERE goal_id = " + goalId)) {
+                List<Goal> goals = new ArrayList<>();
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        try {
+                            Goal goal = new Goal(resultSet.getInt("goal_id"), resultSet.getString("goal_name"), resultSet.getString("goal_criteria_name"),
+                                    resultSet.getInt("current_contribution"), resultSet.getLong("start_time"), resultSet.getLong("end_time"));
+                            completableFuture.complete(Optional.of(goal));
+                            return;
+                        }
+                        catch (IllegalGoalConfigIdException e) {
+                            completableFuture.completeExceptionally(e);
+                        }
+                    }
+                }
+                completableFuture.complete(Optional.empty());
             }
             catch (SQLException e) {
                 completableFuture.completeExceptionally(e);

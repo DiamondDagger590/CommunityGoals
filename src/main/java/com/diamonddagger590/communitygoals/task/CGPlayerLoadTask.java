@@ -27,6 +27,10 @@ public class CGPlayerLoadTask extends PlayerLoadTask {
 
     @Override
     protected boolean loadPlayer() {
+        for (int goalId : getPlugin().getGoalManager().getAllGoalIds()) {
+            // Will load the contribution
+            getCorePlayer().getPlayerContribution(goalId);
+        }
         return true;
     }
 

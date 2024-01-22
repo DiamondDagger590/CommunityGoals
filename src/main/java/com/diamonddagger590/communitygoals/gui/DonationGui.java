@@ -8,6 +8,7 @@ import com.diamonddagger590.communitygoals.goal.criteria.impl.ItemDonationCriter
 import com.diamonddagger590.communitygoals.player.CGPlayer;
 import com.diamonddagger590.mccore.CorePlugin;
 import com.diamonddagger590.mccore.exception.CorePlayerOfflineException;
+import com.diamonddagger590.mccore.gui.ClosableGui;
 import com.diamonddagger590.mccore.gui.Gui;
 import com.diamonddagger590.mccore.gui.GuiTracker;
 import org.bukkit.Bukkit;
@@ -22,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public class DonationGui extends Gui {
+public class DonationGui extends Gui implements ClosableGui {
 
     private final CGPlayer cgPlayer;
     private final int goalId;
@@ -66,8 +67,19 @@ public class DonationGui extends Gui {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void handleCloseEvent(InventoryCloseEvent inventoryCloseEvent) {
-        if (inventoryCloseEvent.getInventory() == inventory
-                && inventoryCloseEvent.getPlayer() instanceof Player player
+        handleClose(inventoryCloseEvent);
+    }
+
+    @Override
+    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+        if (inventoryCloseEvent.getPlayer() instanceof Player player) {
+            handleClose(player, inventoryCloseEvent.getInventory());
+        }
+    }
+
+    @Override
+    public void handleClose(@NotNull Player player, @NotNull Inventory inventory) {
+        if (this.inventory == inventory
                 && player.getUniqueId().equals(cgPlayer.getUUID())) {
             CommunityGoals communityGoals = CommunityGoals.getInstance();
             GuiTracker guiTracker = communityGoals.getGuiTracker();
@@ -99,8 +111,7 @@ public class DonationGui extends Gui {
                                     remainingContribution = 0;
                                     if (newAmount == 0) {
                                         inventory.setItem(i, new ItemStack(Material.AIR));
-                                    }
-                                    else {
+                                    } else {
                                         itemStack.setAmount(newAmount);
                                     }
                                 }

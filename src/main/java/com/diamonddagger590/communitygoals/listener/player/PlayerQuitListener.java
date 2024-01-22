@@ -10,6 +10,7 @@ public class PlayerQuitListener implements Listener {
 
     @EventHandler
     public void handleQuit(PlayerQuitEvent playerQuitEvent) {
+        playerQuitEvent.getPlayer().closeInventory();
         PlayerManager playerManager = CommunityGoals.getInstance().getPlayerManager();
         playerManager.removePlayer(playerQuitEvent.getPlayer().getUniqueId());
     }

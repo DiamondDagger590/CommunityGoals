@@ -2,6 +2,7 @@ package com.diamonddagger590.communitygoals;
 
 import com.diamonddagger590.communitygoals.command.DonateItemCommand;
 import com.diamonddagger590.communitygoals.command.GoalEndCommand;
+import com.diamonddagger590.communitygoals.command.GoalInfoCommand;
 import com.diamonddagger590.communitygoals.command.GoalListCommand;
 import com.diamonddagger590.communitygoals.command.GoalStartCommand;
 import com.diamonddagger590.communitygoals.command.ReloadCommand;
@@ -15,7 +16,9 @@ import com.diamonddagger590.communitygoals.listener.goal.GoalEndListener;
 import com.diamonddagger590.communitygoals.listener.goal.GoalStartListener;
 import com.diamonddagger590.communitygoals.listener.player.PlayerJoinListener;
 import com.diamonddagger590.communitygoals.listener.player.PlayerQuitListener;
+import com.diamonddagger590.communitygoals.placeholder.CGPlaceholder;
 import com.diamonddagger590.mccore.CorePlugin;
+import com.diamonddagger590.mccore.gui.ClosableGui;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +28,7 @@ public final class CommunityGoals extends CorePlugin {
     private CriteriaManager criteriaManager;
     private GoalManager goalManager;
     private FileManager fileManager;
+    private boolean papiEnabled;
 
     @Override
     public void onEnable() {
@@ -39,10 +43,22 @@ public final class CommunityGoals extends CorePlugin {
 
         constructCommands();
         registerListeners();
+
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new CGPlaceholder().register();
+            papiEnabled = true;
+        }
     }
 
     @Override
     public void onDisable() {
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            guiTracker.getOpenedGui(player).ifPresent(gui -> {
+                if (gui instanceof ClosableGui closableGui) {
+                    closableGui.handleClose(player, player.getOpenInventory().getTopInventory());
+                }
+            });
+        });
         goalManager.shutdown();
         super.onDisable();
     }
@@ -58,6 +74,7 @@ public final class CommunityGoals extends CorePlugin {
         super.constructCommands();
         DonateItemCommand.registerCommand();
         GoalStartCommand.registerCommand();
+        GoalInfoCommand.registerCommand();
         GoalListCommand.registerCommand();
         GoalEndCommand.registerCommand();
         ReloadCommand.registerCommand();
@@ -93,6 +110,10 @@ public final class CommunityGoals extends CorePlugin {
     @NotNull
     public FileManager getFileManager() {
         return fileManager;
+    }
+
+    public boolean isPapiEnabled() {
+        return papiEnabled;
     }
 
     @NotNull

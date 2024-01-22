@@ -74,7 +74,7 @@ public class CustomConfiguration {
                 }
                 try {
                     if (outFile.exists() && !replace) {
-                        communityGoals.getLogger().log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
+//                        communityGoals.getLogger().log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
                     } else {
                         FileOutputStream ex = new FileOutputStream(outFile);
                         byte[] buf = new byte[1024];

@@ -23,7 +23,7 @@ apply {
 }
 
 //RECODE.RELEASE.PATCH.DEVELOPMENT
-version = "1.0-SNAPSHOT"
+version = "1.0.7-SNAPSHOT"
 group = "com.diamonddagger590"
 
 java {
@@ -37,12 +37,10 @@ repositories {
 
     maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") //Papi
-    maven("https://maven.enginehub.org/repo/") //WorldGuard
     maven("https://nexus.wesjd.net/repository/thirdparty/")
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
     maven("https://repo.codemc.io/repository/maven-public/")
     maven("https://repo.aikar.co/content/groups/aikar/")
-    maven("https://repo.mattstudios.me/artifactory/public/") //triumph-gui
 
     //Spigot
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
@@ -63,15 +61,6 @@ dependencies {
 
     val placeholderAPIVersion = "2.9.2"
     compileOnly("me.clip:placeholderapi:$placeholderAPIVersion")
-
-    val worldGuardVersion = "7.0.7"
-    compileOnly("com.sk89q.worldguard:worldguard-bukkit:$worldGuardVersion")
-
-    //Jar deps
-    compileOnly(files("libs/Sickle.jar"))
-    compileOnly(files("libs/SpartanAPI.jar"))
-    compileOnly(files("libs/mcMMO.jar"))
-    compileOnly(files("libs/NoCheatPlus.jar")) //3.16.0-RC-sMD5NET-b1134
 }
 
 tasks.withType<JavaCompile> {
@@ -119,7 +108,6 @@ tasks {
         archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}-${archiveAppendix.get()}${if (classifier.isEmpty()) "" else "-$classifier"}.${archiveExtension.get()}")
 
         mergeServiceFiles()
-        relocate("de.tr7zw.changeme.nbtapi", "com.diamonddagger590.nbtapi")
         relocate("org.bstats", "com.diamonddagger590.communitygoals")
         relocate("ch.jalu.configme", "com.diamonddagger590.communitygoals.configme")
         relocate("com.diamonddagger590.mccore", "com.diamonddagger590.communitygoals.mccore")

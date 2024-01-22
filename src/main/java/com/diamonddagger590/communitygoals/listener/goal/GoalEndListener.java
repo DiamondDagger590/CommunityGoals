@@ -16,6 +16,7 @@ public class GoalEndListener implements Listener {
     public void handleGoalEnded(GoalEndEvent goalEndEvent) {
         GoalManager goalManager = CommunityGoals.getInstance().getGoalManager();
         goalManager.stopTrackingGoal(goalEndEvent.getGoal());
+        goalManager.retireGoal(goalEndEvent.getGoal());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

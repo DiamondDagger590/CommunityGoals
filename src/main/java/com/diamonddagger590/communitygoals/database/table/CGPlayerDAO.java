@@ -2,12 +2,15 @@ package com.diamonddagger590.communitygoals.database.table;
 
 import com.diamonddagger590.communitygoals.CommunityGoals;
 import com.diamonddagger590.communitygoals.database.CommunityGoalsDatabaseManager;
+import com.diamonddagger590.communitygoals.player.PlayerContribution;
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class CGPlayerDAO {
@@ -49,10 +52,10 @@ public class CGPlayerDAO {
             try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                     "(" +
                     "`player_uuid` varchar(36) NOT NULL," +
-                    "`goal_uuid` varchar(36) NOT NULL," +
+                    "`goal_id` int(11) NOT NULL," +
                     "`contribution` int(11) NOT NULL DEFAULT 0," +
-                    "PRIMARY KEY (`player_uuid`, `goal_uuid`)," +
-                    "CONSTRAINT fk_goal_uuid FOREIGN KEY (`goal_uuid`) REFERENCES " + GoalDAO.TABLE_NAME + " (goal_uuid)" +
+                    "PRIMARY KEY (`player_uuid`, `goal_id`)," +
+                    "CONSTRAINT fk_goal_uuid FOREIGN KEY (`goal_id`) REFERENCES " + GoalDAO.TABLE_NAME + " (goal_id)" +
                     ");")) {
                 statement.executeUpdate();
             }
@@ -105,4 +108,52 @@ public class CGPlayerDAO {
 
         return completableFuture;
     }
+
+    @NotNull
+    public static CompletableFuture<PlayerContribution> getPlayerContribution(@NotNull Connection connection, @NotNull UUID playerUUID, int goalId) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<PlayerContribution> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT contribution FROM " + TABLE_NAME +
+                    " WHERE goal_id = " + goalId + " AND player_uuid = '" + playerUUID.toString() + "'")) {
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        int contributionAmount = resultSet.getInt("contribution");
+                        completableFuture.complete(new PlayerContribution(goalId, playerUUID, contributionAmount));
+                        return;
+                    }
+                }
+                completableFuture.complete(new PlayerContribution(goalId, playerUUID, 0));
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<Void> savePlayerContribution(@NotNull Connection connection, @NotNull PlayerContribution playerContribution) {
+        CommunityGoalsDatabaseManager databaseManager = CommunityGoals.getInstance().getDatabaseManager();
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (player_uuid, goal_id, contribution) VALUES (?, ?, ?)")) {
+                preparedStatement.setString(1, playerContribution.contributor().toString());
+                preparedStatement.setInt(2, playerContribution.goalId());
+                preparedStatement.setInt(3, playerContribution.contributionAmount());
+                preparedStatement.executeUpdate();
+                completableFuture.complete(null);
+            }
+            catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
+        return completableFuture;
+    }
+
+
 }

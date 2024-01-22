@@ -33,7 +33,7 @@ public class Goal {
         }
         this.id = id;
         this.criteriaConfigName = criteriaConfigName;
-        loadCriteria(true);
+        loadCriteria();
         this.currentContribution = 0;
         this.startTime = -1;
         this.endTime = -1;
@@ -43,21 +43,19 @@ public class Goal {
         this.id = id;
         this.name = name;
         this.criteriaConfigName = criteriaConfigName;
-        loadCriteria(false);
+        loadCriteria();
         this.currentContribution = currentContribution;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    private void loadCriteria(boolean loadAll) throws IllegalGoalConfigIdException {
+    private void loadCriteria() throws IllegalGoalConfigIdException {
         FileConfiguration fileConfiguration = CommunityGoals.getInstance().getFileManager().getCustomFile(FileType.GOALS_CONFIG).getFileConfiguration();
         try {
             CriteriaType criteriaType = CriteriaType.valueOf(fileConfiguration.getString("goals." + criteriaConfigName + ".contribution_type"));
             criteria = criteriaType.getCriteria(criteriaConfigName);
             requiredContribution = fileConfiguration.getInt("goals." + criteriaConfigName + ".required_contribution");
-            if (loadAll) {
-                name = fileConfiguration.getString("goals." + criteriaConfigName + ".name");
-            }
+            name = fileConfiguration.getString("goals." + criteriaConfigName + ".name");
         }
         catch (IllegalArgumentException | NullPointerException e) {
             throw new IllegalGoalConfigIdException(String.format("Could not load criteria data for goal with configuration id %s", criteriaConfigName));
@@ -151,7 +149,7 @@ public class Goal {
 
     public void reloadGoal() {
         try {
-            loadCriteria(false);
+            loadCriteria();
         }
         catch (IllegalGoalConfigIdException e) {
             e.printStackTrace();

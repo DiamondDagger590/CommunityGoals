@@ -2,7 +2,7 @@ goals:
   # Goal criteria id
   rubble_goal:
     # Goal's display name
-    name: '<gold>Collect Rubble!'
+    name: 'Collect Rubble!'
     # How much contribution is required
     required_contribution: 100
     # Only option right now is ITEM_DONATION

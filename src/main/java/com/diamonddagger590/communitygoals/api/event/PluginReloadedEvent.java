@@ -1,4 +1,4 @@
-package com.diamonddagger590.communitygoals.api.event.goal;
+package com.diamonddagger590.communitygoals.api.event;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

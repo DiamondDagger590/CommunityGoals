@@ -25,6 +25,7 @@ public class DonateItemCommand {
         commandManager.command(commandManager.commandBuilder("goal")
                 .literal("donate")
                 .argument(IntegerArgument.of("goal_id"))
+                .permission("communitygoals.donate")
                 .senderType(Player.class)
                 .handler(commandContext -> {
                     Player player = (Player) commandContext.getSender();
@@ -32,8 +33,7 @@ public class DonateItemCommand {
                     PlayerManager playerManager = communityGoals.getPlayerManager();
                     if (playerManager.getPlayer(player.getUniqueId()).isPresent()
                             && playerManager.getPlayer(player.getUniqueId()).get() instanceof CGPlayer cgPlayer) {
-
-                        Audience audience = CommunityGoals.getInstance().getAdventure().all();
+                        Audience audience = CommunityGoals.getInstance().getAdventure().player(player);
                         MiniMessage miniMessage = CommunityGoals.getInstance().getMiniMessage();
                         GoalManager goalManager = communityGoals.getGoalManager();
                         int goalId = commandContext.get("goal_id");
